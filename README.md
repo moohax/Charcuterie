@@ -29,3 +29,14 @@ torch-classes-load-library                     Loads a dll, so, or dylib via tor
 torch-jit                                      Load code via torch.jit.load()
 torch-load                                     Standard torch.load()
 ```
+
+# OpenPhish
+Use OpenAI GPT-3 to generate phishy materials. 
+
+## Quick Start
+```
+Get an API key from beta.openai.com and drop it in openphish.py
+python ./openphish.py create
+python ./openphish.py history
+
+```

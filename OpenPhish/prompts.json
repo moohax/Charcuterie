@@ -1,0 +1,25 @@
+{
+    "prompts": [
+        {
+            "input": "This is a test",
+            "parameters": "",
+            "output": [
+                ".\")\n\nThis is a test."
+            ]
+        },
+        {
+            "input": "Write a long job description for a sale executive making $400,000 per year with benefits",
+            "parameters": "",
+            "output": [
+                "\n\nThe Sales Executive is responsible for leading the sales team and developing new business opportunities to drive revenue growth. This role will work closely with the marketing team to create and execute sales strategies and plans. The Sales Executive will also be responsible for managing and developing key accounts. This role requires excellent communication, negotiation, and presentation skills.\n\nThe ideal candidate will have at least 5 years of sales experience, with experience leading a sales team. The candidate should also have a proven track record of achieving sales targets. The candidate should be a strategic thinker with the ability to think outside the box to identify new business opportunities. The Sales Executive should also be an excellent communicator with strong negotiation and presentation skills."
+            ]
+        },
+        {
+            "input": "Write a good phishing email",
+            "parameters": "",
+            "output": [
+                "\n\n\nHello,\n\nI am writing to you because I recently came across your resume online and was very impressed with your qualifications. I am currently working with a company that is in need of a talented individual like yourself, and I believe you would be perfect for the job.\n\nThe position would involve working with our team to help design and implement new security measures for our website. If you are interested, I would be happy to set up a meeting so that we can discuss the details further.\n\nThank you for your time,\n\n[Your name]"
+            ]
+        }
+    ]
+}
