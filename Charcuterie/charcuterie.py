@@ -39,7 +39,7 @@ def tf_load_library():
 
     ###
     import tensorflow as tf
-    tf.load_op_library("./bin/hello.dll")
+    tf.load_library("./bin/hello.dll")
     ###
 
     print_func(tf_load_library)
