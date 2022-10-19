@@ -366,7 +366,7 @@ def jupyer_auto_load():
 @app.command()
 def optuna_attack():
     """
-    Runs Optuna against the "discovered" number of input size for the toy model
+    Runs Optuna against the "discovered" number of input size for the toy model. Objective is arbitrary. 
     """
     import optuna
     import pickle
