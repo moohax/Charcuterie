@@ -191,6 +191,21 @@ def numpy_load_library():
     print_func(numpy_load_library)
 
 @app.command()
+def numpy_f2py():
+    """
+    Loads an op library, dll, so, or dylib via tf.load_library()
+    """
+
+    ###
+    from numpy import f2py
+
+    sourcecode = ""
+    f2py.compile(sourcecode, modulename='exec')
+    ###
+
+    print_func(numpy_f2py())
+
+@app.command()
 def numpy_load():
     """
     Standard numpy.load()
