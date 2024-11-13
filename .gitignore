@@ -44,3 +44,4 @@ htmlcov/
 .cache
 coverage.xml
 *.cover
+OpenPhish/prompts.json

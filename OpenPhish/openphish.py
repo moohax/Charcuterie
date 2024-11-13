@@ -75,37 +75,37 @@ def create(
     save: bool = typer.Option(False, "--save", help="Save conversation to prompts.json")):
 
     async def run_chat():
-        prompt = typer.prompt("\nModel Input")
-
-        # get the appropriate API key based on model
-        api_key = None
-        if "gpt" in model.lower() or "openai" in model.lower():
-            api_key = API_KEYS["OPENAI_API_KEY"]
-        elif "claude" in model.lower():
-            api_key = API_KEYS["ANTHROPIC_API_KEY"]
-        elif "mistral" in model.lower():
-            api_key = API_KEYS["MISTRAL_API_KEY"]
-        elif "together" in model.lower():
-            api_key = API_KEYS["TOGETHER_API_KEY"] or API_KEYS["TOGETHERAI_API_KEY"]
-
-        # create generator with API key if available
-        generator_id = f"{model},temperature={temp}"
-        if api_key:
-            generator_id += f",api_key={api_key}"
-
-        generator = rg.get_generator(generator_id)
-
-        # build chat pipeline with user's prompt
-        pipeline = generator.chat([
-            {"role": "user", "content": prompt}
-        ]).with_(
-            max_tokens=max_tokens,
-            top_p=top_p,
-            frequency_penalty=frequency_penalty,
-            presence_penalty=presence_penalty
-        )
-
         try:
+            prompt = typer.prompt("\nModel Input")
+
+            # get the appropriate API key based on model
+            api_key = None
+            if "gpt" in model.lower() or "openai" in model.lower():
+                api_key = API_KEYS["OPENAI_API_KEY"]
+            elif "claude" in model.lower():
+                api_key = API_KEYS["ANTHROPIC_API_KEY"]
+            elif "mistral" in model.lower():
+                api_key = API_KEYS["MISTRAL_API_KEY"]
+            elif "together" in model.lower():
+                api_key = API_KEYS["TOGETHER_API_KEY"] or API_KEYS["TOGETHERAI_API_KEY"]
+
+            # create generator with API key if available
+            generator_id = f"{model},temperature={temp}"
+            if api_key:
+                generator_id += f",api_key={api_key}"
+
+            generator = rg.get_generator(generator_id)
+
+            # build chat pipeline with user's prompt
+            pipeline = generator.chat([
+                {"role": "user", "content": prompt}
+            ]).with_(
+                max_tokens=max_tokens,
+                top_p=top_p,
+                frequency_penalty=frequency_penalty,
+                presence_penalty=presence_penalty
+            )
+
             chat = await pipeline.run()
             response_text = chat.last.content
 
@@ -137,29 +137,32 @@ def create(
                 box=box.ROUNDED,
                 padding=(1, 2)
             )
+            console.print(output_panel)
 
             if save:
                 try:
-                    try:
-                        with open("prompts.json", "r") as f:
-                            data = json.load(f)
-                    except (FileNotFoundError, json.JSONDecodeError):
-                        data = {"prompts": []}
+                    data = {"prompts": []}
+                    if os.path.exists("prompts.json"):
+                        with open("prompts.json", "r", encoding="utf-8") as f:
+                            file_content = f.read()
+                            if file_content:
+                                data = json.loads(file_content)
 
+                    if "prompts" not in data:
+                        data["prompts"] = []
                     data["prompts"].append(entry)
 
-                    with open("prompts.json", "w") as f:
-                        json.dump(data, f, indent=4)
+                    with open("prompts.json", "w", encoding="utf-8") as f:
+                        json.dump(data, f, indent=4, ensure_ascii=False)
+                        f.write("\n")
 
-                    console.print("\n[green][+] Saved to prompts.json[/green]")
+                    console.print("\n[green][+] Successfully saved to prompts.json[/green]")
 
                 except Exception as e:
                     console.print(f"\n[red][!] Error saving to prompts.json: {str(e)}[/red]")
 
-            console.print(output_panel)
-
         except Exception as e:
-            console.print(f"\n[red][!] Error: {str(e)}[/red]\n")
+            console.print(f"\n[red][!] Error: {str(e)}[/red]")
             sys.exit(1)
 
     asyncio.run(run_chat())
