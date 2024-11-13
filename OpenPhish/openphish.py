@@ -28,41 +28,52 @@ app = typer.Typer()
 @app.command()
 def history():
     try:
-        with open("prompts.json", "r") as f:
-            data = json.load(f)
+        # initialize empty list to store all entries
+        entries = []
 
-            table = Table(box=box.ROUNDED, show_header=True, header_style="bold magenta")
-            table.add_column("Timestamp", style="cyan")
-            table.add_column("Input", style="green")
-            table.add_column("Model", style="yellow")
-            table.add_column("Output", style="blue")
+        with open("prompts.jsonl", "r") as f:
+            for line in f:
+                entry = json.loads(line.strip())
+                messages = entry.get("messages", [])
+                generated = entry.get("generated", [])
 
-            for prompt in data.get("prompts", []):
-                # Handle both old and new format
-                timestamp = prompt.get("timestamp", "N/A")
+                entries.append({
+                    "timestamp": entry.get("timestamp", "N/A").split("T")[0],
+                    "input": messages[0].get("content", "N/A") if messages else "N/A",
+                    "parameters": {
+                        "model": entry.get("generator_id", "N/A").split(",")[0],
+                        "temperature": entry.get("generator_id", "N/A").split("temperature=")[1].split(",")[0] if "temperature=" in entry.get("generator_id", "") else "N/A"
+                    },
+                    "output": [generated[0].get("content", "N/A") if generated else "N/A"]
+                })
 
-                # Handle parameters being either string or dict
-                params = prompt.get("parameters", {})
-                model = params.get("model", "N/A") if isinstance(params, dict) else "N/A"
+        table = Table(box=box.ROUNDED, show_header=True, header_style="bold magenta")
+        table.add_column("Timestamp", style="cyan")
+        table.add_column("Input", style="green")
+        table.add_column("Model", style="yellow")
+        table.add_column("Output", style="blue")
 
-                output_text = prompt["output"][0] if prompt["output"] else "N/A"
-                if len(output_text) > 100:
-                    output_text = output_text[:100] + "..."
+        for entry in entries:
+            output_text = entry["output"][0]
+            if len(output_text) > 100:
+                output_text = output_text[:100] + "..."
 
-                table.add_row(
-                    timestamp,
-                    prompt["input"],
-                    model,
-                    output_text
-                )
+            table.add_row(
+                entry["timestamp"],
+                entry["input"],
+                entry["parameters"]["model"],
+                output_text
+            )
 
-            console.print("\n[bold]Chat History[/bold]")
-            console.print(table)
+        console.print("\n[bold]Chat History[/bold]")
+        console.print(table)
 
     except FileNotFoundError:
-        console.print("\n[red][!] No history found (prompts.json doesn't exist)[/red]\n")
-    except json.JSONDecodeError:
-        console.print("\n[red][!] Error reading history file[/red]\n")
+        console.print("\n[red][!] No history found (prompts.jsonl doesn't exist)[/red]\n")
+    except json.JSONDecodeError as e:
+        console.print(f"\n[red][!] Error reading history file: {str(e)}[/red]\n")
+    except Exception as e:
+        console.print(f"\n[red][!] Unexpected error: {str(e)}[/red]\n")
 
 @app.command()
 def create(
@@ -96,7 +107,7 @@ def create(
 
             generator = rg.get_generator(generator_id)
 
-            # build chat pipeline with user's prompt
+            # create pipeline with watch callback if save is enabled
             pipeline = generator.chat([
                 {"role": "user", "content": prompt}
             ]).with_(
@@ -105,6 +116,10 @@ def create(
                 frequency_penalty=frequency_penalty,
                 presence_penalty=presence_penalty
             )
+
+            if save:
+                log_to_file = rg.watchers.write_chats_to_jsonl("prompts.jsonl")
+                pipeline = pipeline.watch(log_to_file)
 
             chat = await pipeline.run()
             response_text = chat.last.content
@@ -140,26 +155,7 @@ def create(
             console.print(output_panel)
 
             if save:
-                try:
-                    data = {"prompts": []}
-                    if os.path.exists("prompts.json"):
-                        with open("prompts.json", "r", encoding="utf-8") as f:
-                            file_content = f.read()
-                            if file_content:
-                                data = json.loads(file_content)
-
-                    if "prompts" not in data:
-                        data["prompts"] = []
-                    data["prompts"].append(entry)
-
-                    with open("prompts.json", "w", encoding="utf-8") as f:
-                        json.dump(data, f, indent=4, ensure_ascii=False)
-                        f.write("\n")
-
-                    console.print("\n[green][+] Successfully saved to prompts.json[/green]")
-
-                except Exception as e:
-                    console.print(f"\n[red][!] Error saving to prompts.json: {str(e)}[/red]")
+                console.print("\n[green][+] Successfully saved to prompts.jsonl[/green]")
 
         except Exception as e:
             console.print(f"\n[red][!] Error: {str(e)}[/red]")
