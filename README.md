@@ -1,7 +1,7 @@
-# Charcuterie - A little bit of everything. 
-This is a collection of code execution techniques for ML or ML adjacent libraries and a sample attack on a blackbox model using Optuna.  
+# Charcuterie - A little bit of everything.
+This is a collection of code execution techniques for ML or ML adjacent libraries and a sample attack on a blackbox model using Optuna.
 
-## Quick Start 
+## Quick Start
 ```
 git clone https://github.com/moohax/Charcuterie.git
 cd Charcuterie
@@ -31,12 +31,35 @@ torch-load                                     Standard torch.load()
 ```
 
 # OpenPhish
-Use OpenAI GPT-3 to generate phishy materials. 
+Use any model to generate phishy materials supported using [rigging](https://rigging.dreadnode.io/).
 
 ## Quick Start
 ```
-Get an API key from beta.openai.com and drop it in openphish.py
+Get an API key from OpenAI and set an environment variable (`OPENAI_API_KEY=your-api-key-here`)
 python ./openphish.py create
 python ./openphish.py history
+```
 
+experiment with optional parameters:
+
+- `--model gpt-3.5-turbo` - Select the model to use
+- `--temperature 0.8` - Control response creativity (0.0-1.0)
+- `--max-tokens 256` - Maximum length of response
+- `--top-p 1` - Control response diversity
+- `--freq-pen 0` - Reduce repetition in responses
+- `--pres-pen 0` - Encourage new topics
+- `--save` - Save the conversation to prompts.json
+
+for models, [rigging](https://rigging.dreadnode.io/) uses identifier strings in this format:
+
+`<provider>!<model>,<**kwargs>`
+
+examples:
+
+```
+"gpt-3.5-turbo,temperature=0.5"
+"openai/gpt-4,api_key=sk-1234"
+"litellm!claude-3-sonnet-2024022"
+"anthropic/claude-2.1,stop=output:;---,seed=1337"
+"together_ai/meta-llama/Llama-3-70b-chat-hf"
 ```
