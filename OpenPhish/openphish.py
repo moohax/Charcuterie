@@ -89,15 +89,25 @@ def create(
             }
 
             if save:
-                with open("prompts.json", "r+") as f:
+                try:
+                    # Try to read existing data
                     try:
-                        data = json.load(f)
-                    except json.JSONDecodeError:
+                        with open("prompts.json", "r") as f:
+                            data = json.load(f)
+                    except (FileNotFoundError, json.JSONDecodeError):
                         data = {"prompts": []}
 
+                    # Append new entry
                     data["prompts"].append(entry)
-                    f.seek(0)
-                    json.dump(data, f, indent=4)
+
+                    # Write back to file
+                    with open("prompts.json", "w") as f:
+                        json.dump(data, f, indent=4)
+
+                    print("\n[+] Saved to prompts.json")
+
+                except Exception as e:
+                    print(f"\n[!] Error saving to prompts.json: {str(e)}")
 
             print(entry)
 
