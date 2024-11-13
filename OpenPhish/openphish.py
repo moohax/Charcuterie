@@ -37,8 +37,13 @@ def history():
                 messages = entry.get("messages", [])
                 generated = entry.get("generated", [])
 
+                timestamp = entry.get("timestamp", "N/A")
+                if timestamp != "N/A":
+                    # Convert to more readable format: YYYY-MM-DD HH:MM:SS UTC
+                    timestamp = timestamp.replace('T', ' ').split('.')[0] + " UTC"
+
                 entries.append({
-                    "timestamp": entry.get("timestamp", "N/A").split("T")[0],
+                    "timestamp": timestamp,
                     "input": messages[0].get("content", "N/A") if messages else "N/A",
                     "parameters": {
                         "model": entry.get("generator_id", "N/A").split(",")[0],
