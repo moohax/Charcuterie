@@ -7,6 +7,13 @@ import os
 import rigging as rg
 from typing import Optional
 import asyncio
+from datetime import datetime
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich import box
+
+console = Console()
 
 API_KEYS = {
     "OPENAI_API_KEY": None,
@@ -23,12 +30,39 @@ def history():
     try:
         with open("prompts.json", "r") as f:
             data = json.load(f)
+
+            table = Table(box=box.ROUNDED, show_header=True, header_style="bold magenta")
+            table.add_column("Timestamp", style="cyan")
+            table.add_column("Input", style="green")
+            table.add_column("Model", style="yellow")
+            table.add_column("Output", style="blue")
+
             for prompt in data.get("prompts", []):
-                print(prompt)
+                # Handle both old and new format
+                timestamp = prompt.get("timestamp", "N/A")
+
+                # Handle parameters being either string or dict
+                params = prompt.get("parameters", {})
+                model = params.get("model", "N/A") if isinstance(params, dict) else "N/A"
+
+                output_text = prompt["output"][0] if prompt["output"] else "N/A"
+                if len(output_text) > 100:
+                    output_text = output_text[:100] + "..."
+
+                table.add_row(
+                    timestamp,
+                    prompt["input"],
+                    model,
+                    output_text
+                )
+
+            console.print("\n[bold]Chat History[/bold]")
+            console.print(table)
+
     except FileNotFoundError:
-        print("\n[!] No history found (prompts.json doesn't exist)\n")
+        console.print("\n[red][!] No history found (prompts.json doesn't exist)[/red]\n")
     except json.JSONDecodeError:
-        print("\n[!] Error reading history file\n")
+        console.print("\n[red][!] Error reading history file[/red]\n")
 
 @app.command()
 def create(
@@ -76,6 +110,7 @@ def create(
             response_text = chat.last.content
 
             entry = {
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "input": prompt,
                 "parameters": {
                     "model": model,
@@ -88,31 +123,43 @@ def create(
                 "output": [response_text]
             }
 
+            output_panel = Panel(
+                f"[bold green]Input:[/bold green] {prompt}\n\n"
+                f"[bold yellow]Parameters:[/bold yellow]\n"
+                f"  Model: {model}\n"
+                f"  Temperature: {temp}\n"
+                f"  Max Tokens: {max_tokens}\n"
+                f"  Top P: {top_p}\n"
+                f"  Frequency Penalty: {frequency_penalty}\n"
+                f"  Presence Penalty: {presence_penalty}\n\n"
+                f"[bold cyan]Response:[/bold cyan]\n{response_text}",
+                title=f"Chat Response - {entry['timestamp']}",
+                box=box.ROUNDED,
+                padding=(1, 2)
+            )
+
             if save:
                 try:
-                    # Try to read existing data
                     try:
                         with open("prompts.json", "r") as f:
                             data = json.load(f)
                     except (FileNotFoundError, json.JSONDecodeError):
                         data = {"prompts": []}
 
-                    # Append new entry
                     data["prompts"].append(entry)
 
-                    # Write back to file
                     with open("prompts.json", "w") as f:
                         json.dump(data, f, indent=4)
 
-                    print("\n[+] Saved to prompts.json")
+                    console.print("\n[green][+] Saved to prompts.json[/green]")
 
                 except Exception as e:
-                    print(f"\n[!] Error saving to prompts.json: {str(e)}")
+                    console.print(f"\n[red][!] Error saving to prompts.json: {str(e)}[/red]")
 
-            print(entry)
+            console.print(output_panel)
 
         except Exception as e:
-            print(f"\n[!] Error: {str(e)}\n")
+            console.print(f"\n[red][!] Error: {str(e)}[/red]\n")
             sys.exit(1)
 
     asyncio.run(run_chat())
@@ -124,10 +171,10 @@ if __name__ == "__main__":
         API_KEYS[key] = os.getenv(key)
 
     if not any(API_KEYS.values()):
-        print("\n[!] Warning: No API keys found in environment. Set at least one of:")
+        console.print("\n[red][!] Warning: No API keys found in environment. Set at least one of:[/red]")
         for key in API_KEYS:
-            print(f"  - {key}")
-        print("\n")
+            console.print(f"  - {key}")
+        console.print("\n")
         sys.exit(0)
 
     app()
