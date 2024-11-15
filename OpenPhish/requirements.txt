@@ -1,3 +1,6 @@
-typer 
-openai
-rich
+python-dotenv>=1.0.1
+litellm>=1.30.0
+rigging>=2.0.5
+typer>=0.13.0
+python-dotenv>=1.0.1
+rich>=13.9.4
