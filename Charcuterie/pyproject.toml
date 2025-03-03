@@ -1,0 +1,9 @@
+[project]
+name = "charcuterie"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.2.3",
+    "typer>=0.15.2",
+]
